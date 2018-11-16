@@ -9,12 +9,20 @@ public class Menu : MonoBehaviour {
 	private int equipeAtual;
 	private string nomePersonagem;
 
-    [SerializeField] private InputField inputNomeEquipe;
-    [SerializeField] private Text textNomeEquipe;
-    [SerializeField] private List<Sprite> listaPersonagens;
-    [SerializeField] private Image spritePersonagemEscolhido;
-    [SerializeField] private GameObject telaLoading;
-    [SerializeField] private List<Sala> salas;
+    [SerializeField]
+	private InputField inputNomeEquipe;
+    [SerializeField]
+    private Text textNomeEquipe;
+    [SerializeField]
+    private List<Sprite> listaPersonagens;
+    [SerializeField]
+    private Image spritePersonagemEscolhido;
+    [SerializeField]
+    private GameObject telaLoading;
+    [SerializeField]
+    private List<Sala> salas;
+    [SerializeField] private GameObject mensagemErro;
+    [SerializeField] private Text txtMensagemErro;
     [SerializeField] private AudioManager audioManager;
 
     private Conexao conexao;
@@ -69,6 +77,16 @@ public class Menu : MonoBehaviour {
 
         if (equipeAtual == GameControl.numeroEquipes)
 		{
+            // Se a equipe não preencheu o nome, volta
+            if (inputNomeEquipe.text.Length == 0) {
+                mensagemErro.SetActive(true);
+                txtMensagemErro.text = "Nome da equipe em branco";
+                return;
+            }else if (inputNomeEquipe.text.Length > 30) {
+                mensagemErro.SetActive(true);
+                txtMensagemErro.text = "Nome da equipe não pode exceder 30 caracteres";
+                return;
+            }
 			Equipe j = new Equipe(equipeAtual, inputNomeEquipe.text, nomePersonagem);
 			GameControl.equipes.Add(j);
 			equipeAtual++;
@@ -80,7 +98,16 @@ public class Menu : MonoBehaviour {
             StartCoroutine(nameof(LoadingJogo));
 		}
 		else if (equipeAtual < GameControl.numeroEquipes){
-
+            // Se a equipe não preencheu o nome, volta
+            if (inputNomeEquipe.text.Length == 0) {
+                mensagemErro.SetActive(true);
+                txtMensagemErro.text = "Nome da equipe em branco";
+                return;
+            }else if (inputNomeEquipe.text.Length > 30) {
+                mensagemErro.SetActive(true);
+                txtMensagemErro.text = "Nome da equipe não pode exceder 30 caracteres";
+                return;
+            }
             Equipe j = new Equipe(equipeAtual, inputNomeEquipe.text, nomePersonagem);
 			GameControl.equipes.Add(j);
 			equipeAtual++;

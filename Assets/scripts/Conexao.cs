@@ -48,7 +48,8 @@ public class Conexao {
 
             p.id_pergunta = (long)dados["id"];
 
-            p.descricao = Convertertexto((byte[]) dados["descricao"]);
+            //p.descricao = Convertertexto((byte[]) dados["descricao"]);
+            p.descricao = dados["descricao"].ToString();
             p.dificuldade = (string)dados["dificuldade"];
             p.tempo = (int)dados["tempo"];
 
@@ -68,7 +69,8 @@ public class Conexao {
                 Alternativa a = new Alternativa();
 
                 a.id_pergunta = (long)dados["id"];
-                a.descricao = (string)dados["descricao"];
+                //a.descricao = Convertertexto((byte[])dados["descricao"]);
+                a.descricao = dados["descricao"].ToString();
                 a.correto = (bool)dados["correto"];
 
                 p.alternativas.Add(a);
