@@ -85,6 +85,15 @@ public class GameControl : MonoBehaviour {
     public GameObject telaVitoria;
     public Text txtEquipeVencedora;
     public List<GameObject> totens;
+	[Header("Pergunta Expandida")]
+	public GameObject fundoPerguntaExpandida;
+	public Image telaPerguntaExpandida;
+	public Text txtPerguntaExpandida;
+	public Text txtTempoPerguntaExpandida;
+	[Header("Sprites das Telas de Pergunta Expandida")]
+    public Sprite bgPerguntaExpandidaPadrao;
+    public Sprite bgPerguntaExpandidaCoringa;
+    public Sprite bgPerguntaExpandidaBomba;
 
     void Start ()
     {
@@ -217,11 +226,14 @@ public class GameControl : MonoBehaviour {
     		if ( tempoRestante <= 0 )
     		{
     			txtTempo.text = "0";
+				txtTempoPerguntaExpandida.text = "0";
+
     			TempoLimiteAtingido();
     		}
     		else
     		{
     			txtTempo.text = tempoRestante.ToString("#");
+				txtTempoPerguntaExpandida.text = tempoRestante.ToString("#");
     		}
     	}
     }
@@ -249,15 +261,21 @@ public class GameControl : MonoBehaviour {
     // É chamado quando o jogador pressiona o botão de pergunta
     public void GerarPergunta(){
 
-    	if(equipeAtual.pontuacao == 2 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14){
+    	if(equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14){
     		telaPergunta.sprite = bgPerguntaCoringa;
+			telaPerguntaExpandida.sprite = bgPerguntaExpandidaCoringa;
     		txtTempo.color = new Color(1f, .56f, 0f);
+			txtTempoPerguntaExpandida.color = new Color(1f, .56f, 0f);
     	}else if (equipeAtual.pontuacao == 4 || equipeAtual.pontuacao == 10 || equipeAtual.pontuacao == 16) {
     		telaPergunta.sprite = bgPerguntaBomba;
+			telaPerguntaExpandida.sprite = bgPerguntaExpandidaBomba;
     		txtTempo.color = new Color(.92f, .28f, .30f);
+			txtTempoPerguntaExpandida.color = new Color(.92f, .28f, .30f);
     	} else {
     		telaPergunta.sprite = bgPerguntaPadrao;
+			telaPerguntaExpandida.sprite = bgPerguntaExpandidaPadrao;
     		txtTempo.color = new Color(.42f, .70f, .19f);
+			txtTempoPerguntaExpandida.color = new Color(.42f, .70f, .19f);
     	}
     	fundoEscuroTela.SetActive(true);
         StartCoroutine(FadeInOutMusicaPergunta(true));
@@ -303,7 +321,15 @@ public class GameControl : MonoBehaviour {
     			tempoRestante = pergunta.tempo;
     		}
 
-    		txtPergunta.text = pergunta.descricao;
+
+			// Se a pergunta for muito grande mostrar somente uma parte dela
+			if (pergunta.descricao.Length > 350) {
+				txtPergunta.text = pergunta.descricao.Substring(0, 350) + "... [Clique para ler o restante]";
+			}
+			else {
+				txtPergunta.text = pergunta.descricao;
+			}
+    		
     		txtAlternativa1.text = pergunta.alternativas[0].descricao;
     		txtAlternativa2.text = pergunta.alternativas[1].descricao;
     		txtAlternativa3.text = pergunta.alternativas[2].descricao;
@@ -328,7 +354,7 @@ public class GameControl : MonoBehaviour {
     		PararContagem();
     		acertou = true;
 
-            if ((equipeAtual.pontuacao == 2 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14) && (acertou)) {
+            if ((equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14) && (acertou)) {
             //para testar sem ter que ficar acertando a casa correta do tabuleiro descomente a linha de baixo e comente a de cima
     		//if ((equipeAtual.pontuacao == 1 || equipeAtual.pontuacao == 2 || equipeAtual.pontuacao == 3 || equipeAtual.pontuacao == 4 || equipeAtual.pontuacao == 5 || equipeAtual.pontuacao == 6) && (acertou)) {
     			botaoCartasPos.SetActive(true);
@@ -349,38 +375,48 @@ public class GameControl : MonoBehaviour {
 
     			ProximoAJogar();
     		}
-    	}
-    	else
-    	{
+    	} else {
     		fundoEscuroPergunta.SetActive(true);
     		telaAlternativaIncorreta.SetActive(true);
     		PararContagem();
     		acertou = false;
 
-            if ((equipeAtual.pontuacao == 2 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14) && (!acertou)) {
-            //para testar sem ter que ficar acertando a casa correta do tabuleiro descomente a linha de baixo e comente a de cima
-    		//if ((equipeAtual.pontuacao == 1 || equipeAtual.pontuacao == 2 || equipeAtual.pontuacao == 3 || equipeAtual.pontuacao == 4 || equipeAtual.pontuacao == 5 || equipeAtual.pontuacao == 6) && (!acertou)) {
+            if ((equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14) && (!acertou)) {
+                //para testar sem ter que ficar acertando a casa correta do tabuleiro descomente a linha de baixo e comente a de cima
+                //if ((equipeAtual.pontuacao == 1 || equipeAtual.pontuacao == 2 || equipeAtual.pontuacao == 3 || equipeAtual.pontuacao == 4 || equipeAtual.pontuacao == 5 || equipeAtual.pontuacao == 6) && (!acertou)) {
 
-    			botaoCartasNeg.SetActive(true);
-    			botaoCartasNeg.GetComponent<Button>().interactable = true;
+                botaoCartasNeg.SetActive(true);
+                botaoCartasNeg.GetComponent<Button>().interactable = true;
 
                 // Remove a pergunta da lista para não repetir
-    			perguntas.Remove(pergunta);
+                perguntas.Remove(pergunta);
 
-    			StartCoroutine(nameof(FecharTelaEmSegundos), 1);
+                StartCoroutine(nameof(FecharTelaEmSegundos), 1);
 
-                //fazer efeito da carta negativa
-
-    		} else {
+            } else {
                 // Remove a pergunta da lista para não repetir
-    			perguntas.Remove(pergunta);
+                perguntas.Remove(pergunta);
 
-    			StartCoroutine(nameof(FecharTelaEmSegundos), 1);
+                StartCoroutine(nameof(FecharTelaEmSegundos), 1);
 
-    			if ((equipeAtual.carta != null) && (equipeAtual.carta.id_carta == 3)) { 
-    				equipeAtual.pontuacao -= 1;
-    				RetornarEfeitoNeg();
-    			}else {
+                if ((equipeAtual.carta != null) && (equipeAtual.carta.id_carta == 3)) {
+                    equipeAtual.pontuacao -= 1;
+                    RetornarEfeitoNeg();
+                } else if (equipeAtual.pontuacao == 4 || equipeAtual.pontuacao == 10 || equipeAtual.pontuacao == 16) {
+
+                    /*
+                    if (equipeAtual.pontuacao - numSorteado != 0) {
+                        equipeAtual.pontuacao -= numSorteado * 2;
+                        if (equipeAtual.pontuacao <= 0)
+                            equipeAtual.pontuacao = 1;
+                    } else {
+                        */
+                        equipeAtual.pontuacao -= numSorteado * 2;
+                        if (equipeAtual.pontuacao <= 0)
+                            equipeAtual.pontuacao = 0;
+
+                    RetornarEfeitoNeg();
+                } else {
     				Retornar();
     			}
     		}
@@ -450,19 +486,19 @@ public class GameControl : MonoBehaviour {
             //volte para casa que estava no inicio do seu turno +1
     		equipeAtual.pontuacao -= (numSorteado + 1);
     		if (equipeAtual.pontuacao <= 0)
-    		equipeAtual.pontuacao = 1;
+    		equipeAtual.pontuacao = 0;
     		RetornarEfeitoNeg();
     	} else if (equipeAtual.carta.id_carta == 4) {
             //volte para casa que estava no inicio do seu turno +2
     		equipeAtual.pontuacao -= (numSorteado + 2);
     		if (equipeAtual.pontuacao <= 0)
-    		equipeAtual.pontuacao = 1;
+    		equipeAtual.pontuacao = 0;
     		RetornarEfeitoNeg();
     	} else if (equipeAtual.carta.id_carta == 5) {
             //volte o dobro da quantidade de casas que andou
     		equipeAtual.pontuacao -= numSorteado * 2;
     		if (equipeAtual.pontuacao <= 0)
-    		equipeAtual.pontuacao = 1;
+    		equipeAtual.pontuacao = 0;
     		RetornarEfeitoNeg();
     	} else {
     		Retornar();
@@ -516,7 +552,7 @@ public class GameControl : MonoBehaviour {
     	if (equipeAtual.pontuacao > 0) {
     		qntRetornar = equipeAtual.pontuacao;
     	} else {
-    		qntRetornar = 1;
+    		qntRetornar = 0;
     	}
 
     	GameObject playerGo = GameObject.Find(equipeAtual.nomeGO);
@@ -613,11 +649,7 @@ public class GameControl : MonoBehaviour {
 
     private void Mover(int pontoParadaFinal) {
 
-    	if ((pontoParadaFinal != 8) && (pontoParadaFinal != 9) && (pontoParadaFinal != 16) && (pontoParadaFinal != 17) && (pontoParadaFinal != 24) && (pontoParadaFinal != 25)) {
-    		GameObject.Find("BreakPoint" + pontoParadaFinal + "").GetComponent<BoxCollider2D>().enabled = true;
-    	} else {
-    		GameObject.Find("BreakPoint" + pontoParadaFinal + "").GetComponent<PolygonCollider2D>().enabled = true;
-    	}
+    	GameObject.Find("BreakPoint" + pontoParadaFinal + "").GetComponent<BoxCollider2D>().enabled = true;
     	GameObject.Find("BreakPoint" + pontoParadaFinal + "").GetComponent<SpriteRenderer>().enabled = true;
     }
 
@@ -690,4 +722,19 @@ public class GameControl : MonoBehaviour {
         }
         yield return null;
     }
+
+	public void ExpandirOuOcultarPergunta()
+	{
+		if (fundoPerguntaExpandida.activeSelf == false)
+		{
+			fundoEscuroPergunta.SetActive(true);
+			fundoPerguntaExpandida.SetActive(true);
+			txtPerguntaExpandida.text = pergunta.descricao;
+		}
+		else
+		{
+			fundoEscuroPergunta.SetActive(false);
+			fundoPerguntaExpandida.SetActive(false);
+		}
+	}
 }

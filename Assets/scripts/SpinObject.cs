@@ -6,9 +6,9 @@ using System.Linq;
 public class SpinObject : MonoBehaviour {
  
     [SerializeField]
-    private float deltaLimit = 60f;
+    private float deltaLimit = 0.2f;
     [SerializeField]
-    private float deltaReduce = 2f;
+    private float deltaReduce = 0.5f;
     public bool CanRotate {get; set;}
     [SerializeField]
     [Header("Valor que indica velocidade de rotação da roleta")]
@@ -35,44 +35,46 @@ public class SpinObject : MonoBehaviour {
 
 	private void RotateThis()
 	{
-        if (Input.GetMouseButtonDown (0) && CanRotate) {
 
-			// Get initial rotation of this game object
-			deltaRotation = 0f;
-			previousRotation = AngleBetweenPoints (transform.position, Camera.main.ScreenToWorldPoint (Input.mousePosition));
+        if (Input.GetMouseButtonDown(0) && CanRotate) {
+
+            // Get initial rotation of this game object
+            deltaRotation = 0f;
+
+            Debug.Log("Down posicao da roleta: " + transform.position);
+            Debug.Log("Down posicao do mouse na tela ao clicar: " + Camera.main.ScreenToWorldPoint(Input.mousePosition));
+
+            previousRotation = AngleBetweenPoints(transform.position, Camera.main.ScreenToWorldPoint(Input.mousePosition));
+            Debug.Log("Down previous rotation:" + previousRotation);
 
             stopDrag = true;
 
-        } else if (Input.GetMouseButton (0) && CanRotate) {
+        }else if (Input.GetMouseButton (0) && CanRotate) {
+
+            Debug.Log("Entrou aqui teste");
 
 			// Rotate along the mouse under Delta Rotation Limit
 			currentRotation = AngleBetweenPoints (transform.position, Camera.main.ScreenToWorldPoint (Input.mousePosition));
 			deltaRotation = Mathf.DeltaAngle (currentRotation, previousRotation);
-			if (Mathf.Abs (deltaRotation) > deltaLimit) {
-				deltaRotation = deltaLimit * Mathf.Sign (deltaRotation);
-			}
+
+            Debug.Log("Current rotation" + currentRotation + " Delta rotation " + deltaRotation);
+
 			previousRotation = currentRotation;
 			transform.Rotate (Vector3.back * Time.deltaTime, deltaRotation);
             
             if (deltaRotation != 0)
                 stopDrag = true;
             
-        } else
-        {
+        }
+        if (Mathf.Abs(deltaRotation) > 15f || girou) {
+            Debug.Log("Comecou rodar");
             if (deltaRotation != 0) girou = true;
-
-            if (Input.GetMouseButtonUp(0) && stopDrag)
-                if (Mathf.Abs(deltaRotation) <= 25f)
-		        {
-		            deltaRotation = deltaRotation > 0 ? 25f : -25f;
-		            stopDrag = false;
-		        }
 
 		    // Inertia
 			transform.Rotate (Vector3.back * Time.deltaTime, deltaRotation);
 			deltaRotation = Mathf.Lerp (deltaRotation, 0, deltaReduce * Time.deltaTime);
 
-		    if (Mathf.Abs(deltaRotation) <= 0.2f)
+            if (Mathf.Abs(deltaRotation) <= deltaLimit)
 		    {
 		        deltaRotation = 0;
                 if (girou)
@@ -102,11 +104,6 @@ public class SpinObject : MonoBehaviour {
 		return fltAngle;
 	}
 
-    private void OnEnable()
-    {
-        deltaLimit = Random.Range(40f, 80f);
-        deltaReduce = Random.Range(0.5f, 1.5f);
-    }
     private void OnDisable()
     {
         CanRotate = true;

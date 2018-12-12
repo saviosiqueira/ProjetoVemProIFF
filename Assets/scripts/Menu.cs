@@ -135,7 +135,7 @@ public class Menu : MonoBehaviour {
         else
             personagemEscolhido++;
 
-        if (listaPersonagens[personagemEscolhido] == null)
+        while (listaPersonagens[personagemEscolhido] == null)
         {
             if (personagemEscolhido+1 > listaPersonagens.Count)
                 personagemEscolhido = 0;
@@ -153,7 +153,7 @@ public class Menu : MonoBehaviour {
         else
             personagemEscolhido--;
 
-        if (listaPersonagens[personagemEscolhido] == null)
+        while (listaPersonagens[personagemEscolhido] == null)
         {
             if (personagemEscolhido - 1 < 0)
                 personagemEscolhido = listaPersonagens.Count-1;

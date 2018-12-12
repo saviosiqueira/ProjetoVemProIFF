@@ -38,7 +38,7 @@ public class Conexao {
         ConectarBanco();
 
         MySqlCommand comando = conexao.CreateCommand();
-        comando.CommandText = "select p.ID, p.DESCRICAO, p.DIFICULDADE, p.TEMPO from pergunta p join sala_pergunta sp on (sp.pergunta_ID = p.ID) where sp.Sala_ID = " + id_sala + " and p.HABILITAR = true";
+        comando.CommandText = "select p.ID, p.DESCRICAO, p.DIFICULDADE, p.TEMPO from pergunta p join sala_pergunta sp on (sp.perguntas_ID = p.ID) where sp.Sala_ID = " + id_sala + " and p.HABILITAR = true";
 
 
         MySqlDataReader dados = comando.ExecuteReader();
