@@ -6225,7 +6225,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3afde3940460d94ca36fd7f76e5df48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deltaLimit: 60
+  deltaLimit: 0.2
   deltaReduce: 1.5
   deltaRotation: 0
 --- !u!1 &1502657819
