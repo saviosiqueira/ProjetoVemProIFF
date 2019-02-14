@@ -1,18 +1,26 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class Menu : MonoBehaviour {
 
-	private int equipeAtual;
+    private bool gerouBotaoSala = false;
+    private bool podeGerarBotaoSala = true;
+    [SerializeField]
+    private Transform botoes;
+
+    private int equipeAtual;
 	private string nomePersonagem;
 
     [SerializeField]
 	private InputField inputNomeEquipe;
     [SerializeField]
     private Text textNomeEquipe;
+    [SerializeField]
+    private GameObject txtMsgAlerta;
     [SerializeField]
     private List<Sprite> listaPersonagens;
     [SerializeField]
@@ -36,7 +44,13 @@ public class Menu : MonoBehaviour {
     public int personagemEscolhido;
 
 
-    void Start(){
+    void Start()
+    {
+        //Reseta a lista de equipes ao retornar ao menu
+        GameControl.equipes = new List<Equipe>();
+        //Reatribui o audio manager
+        audioManager = FindObjectOfType<AudioManager>();
+
         if (audioManager != null)
             audioManager.Play("mus_menu");
         else
@@ -47,20 +61,38 @@ public class Menu : MonoBehaviour {
 	    personagemEscolhido = 0;
         spritePersonagemEscolhido.sprite = listaPersonagens[personagemEscolhido];
 
-        //ta assim por enquanto como teste só puxando a descrição da 1 sala do banco de dados
         conexao = new Conexao();
-        BuscarSalasHabilitadas();
-        
-        foreach (Sala s in salas) {
-            GameObject instancia  = Instantiate(botao, t);
-            instancia.name = "botao"+s.id_sala;
-            Button botaoInstancia = instancia.GetComponent<Button>();
-            botaoInstancia.GetComponentInChildren<Text>().text = s.descricao;
-            botaoInstancia.onClick.AddListener(() => telaEquipe.SetActive(true));
-            botaoInstancia.onClick.AddListener(() => AudioManager.instance.Play("snd_button"));
-            instancia.GetComponentInChildren<BotaoEscolherSala>().sala = s;
-        }
+    }
 
+    public void IniciarJogo() {
+        BuscarSalasHabilitadas();
+
+        if (salas.Count > 0) {
+
+            if (podeGerarBotaoSala) {
+
+                gerouBotaoSala = true;
+                podeGerarBotaoSala = false;
+                txtMsgAlerta.SetActive(false);
+
+                foreach (Sala s in salas) {
+                    GameObject instancia = Instantiate(botao, t);
+                    instancia.name = "botao" + s.id_sala;
+                    Button botaoInstancia = instancia.GetComponent<Button>();
+                    botaoInstancia.GetComponentInChildren<Text>().text = s.descricao;
+                    botaoInstancia.onClick.AddListener(() => telaEquipe.SetActive(true));
+                    botaoInstancia.onClick.AddListener(() => AudioManager.instance.Play("snd_button"));
+                    instancia.GetComponentInChildren<BotaoEscolherSala>().sala = s;
+                }
+            }
+        } else {
+
+            foreach (Transform child in botoes) {
+                Destroy(child.gameObject);
+            }
+            txtMsgAlerta.SetActive(true);
+            podeGerarBotaoSala = true;
+        }
     }
 
     public void NumeroDeJogadores (int x) {
@@ -82,7 +114,8 @@ public class Menu : MonoBehaviour {
                 mensagemErro.SetActive(true);
                 txtMensagemErro.text = "Nome da equipe em branco";
                 return;
-            }else if (inputNomeEquipe.text.Length > 30) {
+            }
+            if (inputNomeEquipe.text.Length > 30) {
                 mensagemErro.SetActive(true);
                 txtMensagemErro.text = "Nome da equipe não pode exceder 30 caracteres";
                 return;
@@ -103,7 +136,8 @@ public class Menu : MonoBehaviour {
                 mensagemErro.SetActive(true);
                 txtMensagemErro.text = "Nome da equipe em branco";
                 return;
-            }else if (inputNomeEquipe.text.Length > 30) {
+            }
+            if (inputNomeEquipe.text.Length > 30) {
                 mensagemErro.SetActive(true);
                 txtMensagemErro.text = "Nome da equipe não pode exceder 30 caracteres";
                 return;
@@ -166,8 +200,19 @@ public class Menu : MonoBehaviour {
 
     IEnumerator LoadingJogo()
     {
-        yield return new WaitForSeconds(3);
+        //yield return new WaitForSeconds(3);
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("Principal");
+        asyncOperation.allowSceneActivation = false;
 
-        SceneManager.LoadSceneAsync("Principal");
+        while (!asyncOperation.isDone)
+        {
+            if (asyncOperation.progress >= 0.9f)
+            {
+                asyncOperation.allowSceneActivation = true;
+            }
+            yield return new WaitForSeconds(1);
+        }
+
+        yield return null;
     }
 }

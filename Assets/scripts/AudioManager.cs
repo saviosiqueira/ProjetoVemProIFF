@@ -69,4 +69,10 @@ public class AudioManager : MonoBehaviour {
 
         return s;
     }
+
+    public bool EstaTocando(string sound)
+    {
+        Sound s = Array.Find(sounds, item => string.Equals(item.name, sound, StringComparison.CurrentCultureIgnoreCase));
+        return s.source.isPlaying;
+    }
 }

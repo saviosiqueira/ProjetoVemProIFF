@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -24,7 +25,15 @@ public class GameControl : MonoBehaviour {
 	public GameObject botaoCartasPos;
 	public GameObject botaoCartasNeg;
 
-	public List<GameObject> cartasPosGO;
+    //tela de sorteio
+    public GameObject telaSorteio;
+    public GameObject botaoRoleta;
+    public GameObject txtVezJogador;
+
+    public List<GameObject> imgJogTelaSorteio;
+    public List<Sprite> jogador_img;
+
+    public List<GameObject> cartasPosGO;
 	public List<GameObject> cartasNegGO;
 
 	public Transform t;
@@ -32,7 +41,8 @@ public class GameControl : MonoBehaviour {
 	private List<Carta> cartasPos = new List<Carta>();
 	private List<Carta> cartasNeg = new List<Carta>();
 
-	public static List<Equipe> equipes = new List<Equipe>();
+    //private static List<Equipe> equipesOrdenadas = new List<Equipe>();
+    public static List<Equipe> equipes = new List<Equipe>();
 	[HideInInspector]
 	private Equipe equipeAtual;
 	public GameObject equipeAtualGO;
@@ -64,6 +74,10 @@ public class GameControl : MonoBehaviour {
     public Text txtAlternativa2;
     public Text txtAlternativa3;
     public Text txtAlternativa4;
+    public Image imgAlternativa1;
+    public Image imgAlternativa2;
+    public Image imgAlternativa3;
+    public Image imgAlternativa4;
     [Header("Objetos da tela")]
     public GameObject telaAlternativaCorreta;
     public GameObject telaAlternativaIncorreta;
@@ -84,8 +98,11 @@ public class GameControl : MonoBehaviour {
     [Header("Tela de Vitória")]
     public GameObject telaVitoria;
     public Text txtEquipeVencedora;
-    public List<GameObject> totens;
-	[Header("Pergunta Expandida")]
+    public List<Sprite> totens;
+    public Image totem1lugar;
+    public Image totem2lugar;
+    public Image totem3lugar;
+    [Header("Pergunta Expandida")]
 	public GameObject fundoPerguntaExpandida;
 	public Image telaPerguntaExpandida;
 	public Text txtPerguntaExpandida;
@@ -94,11 +111,18 @@ public class GameControl : MonoBehaviour {
     public Sprite bgPerguntaExpandidaPadrao;
     public Sprite bgPerguntaExpandidaCoringa;
     public Sprite bgPerguntaExpandidaBomba;
+    [Header("Tela de loading")]
+    public GameObject telaLoading;
 
     void Start ()
     {
+
+        SortearOrdem();
+
         AudioManager.instance.Stop("mus_menu");
         AudioManager.instance.Play("mus_jogo");
+
+        StartCoroutine(TelaSorteio(5));
 
         //Cartas positivas
         //char tipo, int modQntCasas, int modQntTempo, bool usarAgora
@@ -183,27 +207,27 @@ public class GameControl : MonoBehaviour {
     		switch (equipeAtual.nomeGO)
     		{
     			case "jogador1":
-    			player1.GetComponent<MouseGrab>().enabled = true;
-    			player1.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
-    			break;
+    			    player1.GetComponent<MouseGrab>().enabled = true;
+    			    player1.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
+    			    break;
     			case "jogador2":
-    			player2.GetComponent<MouseGrab>().enabled = true;
-    			player2.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
-    			break;
+    			    player2.GetComponent<MouseGrab>().enabled = true;
+    			    player2.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
+    			    break;
     			case "jogador3":
-    			player3.GetComponent<MouseGrab>().enabled = true;
-    			player3.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
-    			break;
+    			    player3.GetComponent<MouseGrab>().enabled = true;
+    			    player3.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
+    			    break;
     			case "jogador4":
-    			player4.GetComponent<MouseGrab>().enabled = true;
-    			player4.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
-    			break;
+    			    player4.GetComponent<MouseGrab>().enabled = true;
+    			    player4.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
+    			    break;
     			case "jogador5":
-    			player5.GetComponent<MouseGrab>().enabled = true;
-    			player5.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
-    			break;
+    			    player5.GetComponent<MouseGrab>().enabled = true;
+    			    player5.GetComponentInChildren<CapsuleCollider2D>().enabled = true;
+    			    break;
     			default:
-    			return;
+    			    break;
     		}
 
             //pontoParadaPlayer1 += numSorteado;
@@ -222,26 +246,33 @@ public class GameControl : MonoBehaviour {
     	}
 
     	if (iniciarContagem){
-    		tempoRestante -= Time.deltaTime;
+            tempoRestante -= Time.deltaTime;
     		if ( tempoRestante <= 0 )
     		{
     			txtTempo.text = "0";
 				txtTempoPerguntaExpandida.text = "0";
 
     			TempoLimiteAtingido();
-    		}
+		        AudioManager.instance.Stop("snd_clock");
+		    }
     		else
     		{
     			txtTempo.text = tempoRestante.ToString("#");
 				txtTempoPerguntaExpandida.text = tempoRestante.ToString("#");
-    		}
-    	}
+
+		        if (!AudioManager.instance.EstaTocando("snd_clock"))
+		        {
+		            AudioManager.instance.Play("snd_clock");
+		        }
+            }
+	        
+        }
     }
 
     public void ProximoAJogar() {
     	// Verifica se o jogador ganhou:
     	if(equipeAtual.pontuacao >= 18) {
-    		ExibirVencedor(equipeAtual);
+    		ExibirVencedores();
     		return;
     	}
 
@@ -261,7 +292,13 @@ public class GameControl : MonoBehaviour {
     // É chamado quando o jogador pressiona o botão de pergunta
     public void GerarPergunta(){
 
-    	if(equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14){
+        // Resetar as cores das alternativas
+        imgAlternativa1.color = Color.white;
+        imgAlternativa2.color = Color.white;
+        imgAlternativa3.color = Color.white;
+        imgAlternativa4.color = Color.white;
+
+        if (equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14){
     		telaPergunta.sprite = bgPerguntaCoringa;
 			telaPerguntaExpandida.sprite = bgPerguntaExpandidaCoringa;
     		txtTempo.color = new Color(1f, .56f, 0f);
@@ -375,7 +412,9 @@ public class GameControl : MonoBehaviour {
 
     			ProximoAJogar();
     		}
-    	} else {
+    	}
+        else
+        {
     		fundoEscuroPergunta.SetActive(true);
     		telaAlternativaIncorreta.SetActive(true);
     		PararContagem();
@@ -420,7 +459,48 @@ public class GameControl : MonoBehaviour {
     				Retornar();
     			}
     		}
-    	}
+        }
+        // Destaca a resposta correta
+        DestacarRespostaCorreta();
+    }
+
+    public void DestacarRespostaCorreta()
+    {
+        if (pergunta.alternativas[0].correto == true)
+        {
+            imgAlternativa1.color = Color.green;
+        }
+        else
+        {
+            imgAlternativa1.color = Color.red;
+        }
+
+        if (pergunta.alternativas[1].correto == true)
+        {
+            imgAlternativa2.color = Color.green;
+        }
+        else
+        {
+            imgAlternativa2.color = Color.red;
+        }
+
+        if (pergunta.alternativas[2].correto == true)
+        {
+            imgAlternativa3.color = Color.green;
+        }
+        else
+        {
+            imgAlternativa3.color = Color.red;
+        }
+
+        if (pergunta.alternativas[3].correto == true)
+        {
+            imgAlternativa4.color = Color.green;
+        }
+        else
+        {
+            imgAlternativa4.color = Color.red;
+        }
     }
 
     // Botao comprar carta positiva
@@ -540,6 +620,51 @@ public class GameControl : MonoBehaviour {
     	Retornar();
     }
 
+    private IEnumerator TelaSorteio(float tempo) {
+
+        yield return new WaitForSeconds(1.5f);
+
+        GameObject descricao = new GameObject();
+        int aux = 0;
+
+        while (aux < equipes.Count) {
+
+            imgJogTelaSorteio[aux].SetActive(true);
+            Debug.Log("aux: " + aux);
+
+            descricao = GameObject.Find("jogador" + (aux + 1) + "-text");
+            descricao.GetComponent<Text>().text = equipes[aux].nome;
+
+            switch (equipes[aux].nomeGO) {
+                case "jogador1":
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[0];
+                    break;
+                case "jogador2":
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[1];
+                    break;
+                case "jogador3":
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[2];
+                    break;
+                case "jogador4":
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[3];
+                    break;
+                case "jogador5":
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[4];
+                    break;
+                default:
+                    break;
+            }
+            yield return new WaitForSeconds(0.8f);
+            aux++;
+        }
+
+        yield return new WaitForSeconds(tempo);
+
+        telaSorteio.SetActive(false);
+        botaoRoleta.SetActive(true);
+        txtVezJogador.SetActive(true);
+    }
+
     private IEnumerator PodeAndar(int segundos) {
     	yield return new WaitForSeconds(segundos);
     	StartCoroutine(nameof(AbduzirEquipe), 0.05);
@@ -559,9 +684,11 @@ public class GameControl : MonoBehaviour {
     	GameObject breakpoint = GameObject.Find("BreakPoint" + (qntRetornar));
 
         //indo para posicao acima do player
-    	Vector2 v2 = new Vector2(playerGo.transform.position.x, playerGo.transform.position.y+2);       
+    	Vector2 v2 = new Vector2(playerGo.transform.position.x, playerGo.transform.position.y+2);
 
-    	while ((oviniGO.transform.position.x != v2.x) && (oviniGO.transform.position.y != v2.y)) {
+        AudioManager.instance.Play("snd_alienVoa");
+
+        while ((oviniGO.transform.position.x != v2.x) && (oviniGO.transform.position.y != v2.y)) {
 
     		oviniGO.transform.position = Vector2.MoveTowards(oviniGO.transform.position,
     			v2, 30f * Time.deltaTime);
@@ -569,6 +696,7 @@ public class GameControl : MonoBehaviour {
     		yield return new WaitForSeconds(tempoEsperar);
     	}
 
+        AudioManager.instance.Play("snd_alienAbduz");
     	oviniLaser1.enabled = true;
     	yield return new WaitForSeconds(0.5f);
     	oviniLaser1.enabled = false;
@@ -594,7 +722,8 @@ public class GameControl : MonoBehaviour {
     		yield return new WaitForSeconds(tempoEsperar);
     	}
 
-    	oviniLaser1.enabled = true;
+        AudioManager.instance.Play("snd_alienAbduz");
+        oviniLaser1.enabled = true;
     	yield return new WaitForSeconds(0.5f);
     	oviniLaser1.enabled = false;
     	oviniLaser2.enabled = true;
@@ -622,7 +751,8 @@ public class GameControl : MonoBehaviour {
 
     private IEnumerator FecharTelaEmSegundos(int segundos)
     {
-    	GameObject respostaCorreta = GameObject.Find("RespostaCorreta");
+        AudioManager.instance.Stop("snd_clock");
+        GameObject respostaCorreta = GameObject.Find("RespostaCorreta");
     	GameObject respostaIncorreta = GameObject.Find("RespostaIncorreta");
     	yield return new WaitForSeconds(segundos);
     	fundoEscuroTela.SetActive(false);
@@ -653,41 +783,80 @@ public class GameControl : MonoBehaviour {
     	GameObject.Find("BreakPoint" + pontoParadaFinal + "").GetComponent<SpriteRenderer>().enabled = true;
     }
 
-    private void ExibirVencedor(Equipe e){
-    	telaVitoria.SetActive(true);
-    	txtEquipeVencedora.text = e.nome;
-    	int totemDaEquipe;
-    	switch (e.nomeGO){
-    		case "jogador1":
-    		totemDaEquipe = 0;
-    		break;
-    		case "jogador2":
-    		totemDaEquipe = 1;
-    		break;
-    		case "jogador3":
-    		totemDaEquipe = 2;
-    		break;
-    		case "jogador4":
-    		totemDaEquipe = 3;
-    		break;
-    		case "jogador5":
-    		totemDaEquipe = 4;
-    		break;
-    		default:
-    		totemDaEquipe = 0;
-    		break;
-    	}
+    private void ExibirVencedores(){
+        List<Equipe> vencedores = equipes.OrderBy(eq => eq.pontuacao).ToList();
+        telaVitoria.SetActive(true);
+        txtEquipeVencedora.text = vencedores[0].nome;
+        totem1lugar.gameObject.SetActive(true);
+        totem2lugar.gameObject.SetActive(true);
+        totem3lugar.gameObject.SetActive(true);
+       
+        switch (vencedores[0].nomeGO)
+        {
+            case "jogador1":
+                totem1lugar.sprite = totens[0];
+                break;
+            case "jogador2":
+                totem1lugar.sprite = totens[1];
+                break;
+            case "jogador3":
+                totem1lugar.sprite = totens[2];
+                break;
+            case "jogador4":
+                totem1lugar.sprite = totens[3];
+                break;
+            case "jogador5":
+                totem1lugar.sprite = totens[4];
+                break;
+            default:
+                totem1lugar.gameObject.SetActive(false);
+                break;
+        }
 
-    	for (int i = 0; i < totens.Count; i++){
-    		if (i == totemDaEquipe){
-    			totens[i].SetActive(true);
-    		}
-    		else
-    		{
-    			totens[i].SetActive(false);
-    		}
-    	}
-    	
+        switch (vencedores[1].nomeGO)
+        {
+            case "jogador1":
+                totem2lugar.sprite = totens[0];
+                break;
+            case "jogador2":
+                totem2lugar.sprite = totens[1];
+                break;
+            case "jogador3":
+                totem2lugar.sprite = totens[2];
+                break;
+            case "jogador4":
+                totem2lugar.sprite = totens[3];
+                break;
+            case "jogador5":
+                totem2lugar.sprite = totens[4];
+                break;
+            default:
+                totem2lugar.gameObject.SetActive(false);
+                break;
+        }
+
+        switch (vencedores[2].nomeGO)
+        {
+            case "jogador1":
+                totem3lugar.sprite = totens[0];
+                break;
+            case "jogador2":
+                totem3lugar.sprite = totens[1];
+                break;
+            case "jogador3":
+                totem3lugar.sprite = totens[2];
+                break;
+            case "jogador4":
+                totem3lugar.sprite = totens[3];
+                break;
+            case "jogador5":
+                totem3lugar.sprite = totens[4];
+                break;
+            default:
+                totem3lugar.gameObject.SetActive(false);
+                break;
+        }
+
     }
 
     private IEnumerator FadeInOutMusicaPergunta(bool fadeIn)
@@ -737,4 +906,34 @@ public class GameControl : MonoBehaviour {
 			fundoPerguntaExpandida.SetActive(false);
 		}
 	}
+
+    public void SortearOrdem() {
+
+        equipes = equipes.OrderBy(x => Random.value).ToList();
+
+    }
+
+    public void RetornarMenu()
+    {
+        StartCoroutine(nameof(LoadingJogo));
+    }
+
+    IEnumerator LoadingJogo()
+    {
+        telaLoading.SetActive(true);
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("Menu");
+        asyncOperation.allowSceneActivation = false;
+
+        while (!asyncOperation.isDone)
+        {
+            if (asyncOperation.progress >= 0.9f)
+            {
+                asyncOperation.allowSceneActivation = true;
+                Destroy(gameObject);
+            }
+            yield return new WaitForSeconds(1);
+        }
+
+        yield return null;
+    }
 }
