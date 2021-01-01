@@ -52,11 +52,14 @@ public class Menu : MonoBehaviour {
         audioManager = FindObjectOfType<AudioManager>();
 
         if (audioManager != null)
+        {
             audioManager.Play("mus_menu");
+            audioManager.Stop("mus_jogo");
+        }
         else
             Debug.LogError("AudioManager não está atribuído");
 
-		equipeAtual = 1;
+        equipeAtual = 1;
 
 	    personagemEscolhido = 0;
         spritePersonagemEscolhido.sprite = listaPersonagens[personagemEscolhido];

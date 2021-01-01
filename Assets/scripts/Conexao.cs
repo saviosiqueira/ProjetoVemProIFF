@@ -91,7 +91,7 @@ public class Conexao {
         ConectarBanco();
 
         MySqlCommand comando = conexao.CreateCommand();
-        comando.CommandText = "select * from sala s where s.HABILITAR = true";
+        comando.CommandText = "select * from sala s where s.HABILITAR = true order by s.DESCRICAO ASC";
         MySqlDataReader dados = comando.ExecuteReader();
 
         while (dados.Read()) {

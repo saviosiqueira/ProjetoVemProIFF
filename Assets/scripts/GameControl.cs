@@ -31,7 +31,9 @@ public class GameControl : MonoBehaviour {
     public GameObject txtVezJogador;
 
     public List<GameObject> imgJogTelaSorteio;
-    public List<Sprite> jogador_img;
+    public List<GameObject> iconeJogadores;
+    public List<Sprite> jogador_img_on;
+    public List<Sprite> jogador_img_off;
 
     public List<GameObject> cartasPosGO;
 	public List<GameObject> cartasNegGO;
@@ -102,6 +104,7 @@ public class GameControl : MonoBehaviour {
     public Image totem1lugar;
     public Image totem2lugar;
     public Image totem3lugar;
+    public GameObject trofeu3lugar;
     [Header("Pergunta Expandida")]
 	public GameObject fundoPerguntaExpandida;
 	public Image telaPerguntaExpandida;
@@ -114,7 +117,10 @@ public class GameControl : MonoBehaviour {
     [Header("Tela de loading")]
     public GameObject telaLoading;
 
-    void Start ()
+    private GameObject cartaAtual;
+    private bool cartaAtualPositiva;
+
+   void Start ()
     {
 
         SortearOrdem();
@@ -180,7 +186,6 @@ public class GameControl : MonoBehaviour {
         efeitoBonus = false;
 
         equipeAtual = equipes[quemJoga-1];
-
         equipeAtualGO = GameObject.Find(equipeAtual.nomeGO);
 
         txtVezDoJogador.text = "Vez da Equipe " + equipeAtual.nome + "!";
@@ -245,33 +250,72 @@ public class GameControl : MonoBehaviour {
     		podeJogar = false;
     	}
 
-    	if (iniciarContagem){
-            tempoRestante -= Time.deltaTime;
-    		if ( tempoRestante <= 0 )
-    		{
-    			txtTempo.text = "0";
-				txtTempoPerguntaExpandida.text = "0";
+    	if (iniciarContagem)
+	    {
+	        tempoRestante -= Time.deltaTime;
+	        if (tempoRestante > 0)
+	        {
+	            txtTempo.text = tempoRestante.ToString("#");
+	            txtTempoPerguntaExpandida.text = tempoRestante.ToString("#");
 
-    			TempoLimiteAtingido();
-		        AudioManager.instance.Stop("snd_clock");
-		    }
-    		else
-    		{
-    			txtTempo.text = tempoRestante.ToString("#");
-				txtTempoPerguntaExpandida.text = tempoRestante.ToString("#");
+	            if (!AudioManager.instance.EstaTocando("snd_clock") && !AudioManager.instance.EstaTocando("snd_clock_10s"))
+	            {
+	                AudioManager.instance.Play("snd_clock");
+	            }
+	            if (!AudioManager.instance.EstaTocando("snd_clock_10s") && tempoRestante <= 10.5f)
+	            {
+	                AudioManager.instance.Stop("snd_clock");
+	                AudioManager.instance.Play("snd_clock_10s");
+	            }
+	        }
+	        else
+	        {
+	            txtTempo.text = "0";
+	            txtTempoPerguntaExpandida.text = "0";
 
-		        if (!AudioManager.instance.EstaTocando("snd_clock"))
-		        {
-		            AudioManager.instance.Play("snd_clock");
-		        }
-            }
-	        
+	            TempoLimiteAtingido();
+	            AudioManager.instance.Stop("snd_clock");
+                AudioManager.instance.Stop("snd_clock_10s");
+	        }
+	    }
+    }
+
+    public void HabilitarIcones() {
+        for (int i = 0; i < equipes.Count; i++) {
+            iconeJogadores[i].SetActive(true);
+        }
+    }
+
+    public void DesabilitarIcones() {
+        for (int i = 0; i < equipes.Count; i++) {
+            iconeJogadores[i].SetActive(false);
         }
     }
 
     public void ProximoAJogar() {
-    	// Verifica se o jogador ganhou:
-    	if(equipeAtual.pontuacao >= 18) {
+
+        switch (equipes[quemJoga - 1].nomeGO) {
+            case "jogador1":
+                iconeJogadores[quemJoga - 1].GetComponent<Image>().sprite = jogador_img_off[0];
+                break;
+            case "jogador2":
+                iconeJogadores[quemJoga - 1].GetComponent<Image>().sprite = jogador_img_off[1];
+                break;
+            case "jogador3":
+                iconeJogadores[quemJoga - 1].GetComponent<Image>().sprite = jogador_img_off[2];
+                break;
+            case "jogador4":
+                iconeJogadores[quemJoga - 1].GetComponent<Image>().sprite = jogador_img_off[3];
+                break;
+            case "jogador5":
+                iconeJogadores[quemJoga - 1].GetComponent<Image>().sprite = jogador_img_off[4];
+                break;
+            default:
+                break;
+        }
+
+        // Verifica se o jogador ganhou:
+        if (equipeAtual.pontuacao >= 18) {
     		ExibirVencedores();
     		return;
     	}
@@ -283,7 +327,28 @@ public class GameControl : MonoBehaviour {
     	}
 
     	equipeAtual = equipes[quemJoga - 1];
-    	equipeAtualGO = GameObject.Find(equipeAtual.nomeGO);
+
+        switch (equipes[quemJoga-1].nomeGO) {
+            case "jogador1":
+                iconeJogadores[quemJoga-1].GetComponent<Image>().sprite = jogador_img_on[0];
+                break;
+            case "jogador2":
+                iconeJogadores[quemJoga-1].GetComponent<Image>().sprite = jogador_img_on[1];
+                break;
+            case "jogador3":
+                iconeJogadores[quemJoga-1].GetComponent<Image>().sprite = jogador_img_on[2];
+                break;
+            case "jogador4":
+                iconeJogadores[quemJoga-1].GetComponent<Image>().sprite = jogador_img_on[3];
+                break;
+            case "jogador5":
+                iconeJogadores[quemJoga-1].GetComponent<Image>().sprite = jogador_img_on[4];
+                break;
+            default:
+                break;
+        }
+
+        equipeAtualGO = GameObject.Find(equipeAtual.nomeGO);
     	txtVezDoJogador.text = "Vez de " + equipeAtual.nome + "!";
     	GameObject.Find("BotaoExibirRoleta").GetComponent<Button>().interactable = true;
     	efeitoBonus = false;
@@ -314,6 +379,9 @@ public class GameControl : MonoBehaviour {
     		txtTempo.color = new Color(.42f, .70f, .19f);
 			txtTempoPerguntaExpandida.color = new Color(.42f, .70f, .19f);
     	}
+
+        DesabilitarIcones();
+
     	fundoEscuroTela.SetActive(true);
         StartCoroutine(FadeInOutMusicaPergunta(true));
         //AudioManager.instance.Play("clock");
@@ -367,10 +435,10 @@ public class GameControl : MonoBehaviour {
 				txtPergunta.text = pergunta.descricao;
 			}
     		
-    		txtAlternativa1.text = pergunta.alternativas[0].descricao;
-    		txtAlternativa2.text = pergunta.alternativas[1].descricao;
-    		txtAlternativa3.text = pergunta.alternativas[2].descricao;
-    		txtAlternativa4.text = pergunta.alternativas[3].descricao;
+    		txtAlternativa1.text = " A - " + pergunta.alternativas[0].descricao;
+    		txtAlternativa2.text = " B - " + pergunta.alternativas[1].descricao;
+    		txtAlternativa3.text = " C - " + pergunta.alternativas[2].descricao;
+    		txtAlternativa4.text = " D - " + pergunta.alternativas[3].descricao;
 
     		IniciarContagem();
     	}
@@ -389,7 +457,8 @@ public class GameControl : MonoBehaviour {
     		fundoEscuroPergunta.SetActive(true);
     		telaAlternativaCorreta.SetActive(true);
     		PararContagem();
-    		acertou = true;
+	        AudioManager.instance.Play("snd_right");
+            acertou = true;
 
             if ((equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14) && (acertou)) {
             //para testar sem ter que ficar acertando a casa correta do tabuleiro descomente a linha de baixo e comente a de cima
@@ -418,6 +487,7 @@ public class GameControl : MonoBehaviour {
     		fundoEscuroPergunta.SetActive(true);
     		telaAlternativaIncorreta.SetActive(true);
     		PararContagem();
+            AudioManager.instance.Play("snd_wrong");
     		acertou = false;
 
             if ((equipeAtual.pontuacao == 6 || equipeAtual.pontuacao == 8 || equipeAtual.pontuacao == 14) && (!acertou)) {
@@ -519,10 +589,35 @@ public class GameControl : MonoBehaviour {
     }
 
     private IEnumerator ExibirCartaPosTela(int segundos) {
-    	GameObject instancia = Instantiate(cartasPosGO[equipeAtual.carta.id_carta - 1], t);
-    	yield return new WaitForSeconds(segundos);
-    	Destroy(instancia);
-    	CartaPositiva();
+    	cartaAtual = Instantiate(cartasPosGO[equipeAtual.carta.id_carta - 1], t);
+        cartaAtualPositiva = true;
+        yield return new WaitForSeconds(segundos / 2);
+    	//Destroy(instancia);
+    	//CartaPositiva();
+    }
+
+    private IEnumerator ExibirCartaNegTela(int segundos)
+    {
+        cartaAtual = Instantiate(cartasNegGO[equipeAtual.carta.id_carta - 1], t);
+        cartaAtualPositiva = false;
+        yield return new WaitForSeconds(segundos / 2);
+        //CartaNegativa();
+        //yield return new WaitForSeconds(segundos/2);
+        //Destroy(instancia);
+    }
+
+    public void DestruirCartaAtual()
+    {
+        if (cartaAtualPositiva)
+        {
+            CartaPositiva();
+            Destroy(cartaAtual);
+        }
+        else
+        {
+            CartaNegativa();
+            Destroy(cartaAtual);
+        }
     }
 
     void CartaPositiva() {
@@ -551,14 +646,6 @@ public class GameControl : MonoBehaviour {
         // Exibir a carta na tela e adicionar um delay aqui. Depois prossegue
     	Debug.Log(equipeAtual.carta.descricao);
 
-    }
-
-    private IEnumerator ExibirCartaNegTela(int segundos) {
-    	GameObject instancia = Instantiate(cartasNegGO[equipeAtual.carta.id_carta - 1], t);
-    	yield return new WaitForSeconds(segundos/2);
-    	CartaNegativa();
-    	yield return new WaitForSeconds(segundos/2);
-    	Destroy(instancia);
     }
 
     void CartaNegativa() {
@@ -612,6 +699,7 @@ public class GameControl : MonoBehaviour {
 
     void TempoLimiteAtingido() {
     	PararContagem();
+        AudioManager.instance.Play("snd_wrong");
     	fundoEscuroPergunta.SetActive(true);
     	telaTempoLimiteAtingido.SetActive(true);
 
@@ -622,9 +710,10 @@ public class GameControl : MonoBehaviour {
 
     private IEnumerator TelaSorteio(float tempo) {
 
+        telaSorteio.SetActive(true);
+
         yield return new WaitForSeconds(1.5f);
 
-        GameObject descricao = new GameObject();
         int aux = 0;
 
         while (aux < equipes.Count) {
@@ -632,37 +721,70 @@ public class GameControl : MonoBehaviour {
             imgJogTelaSorteio[aux].SetActive(true);
             Debug.Log("aux: " + aux);
 
-            descricao = GameObject.Find("jogador" + (aux + 1) + "-text");
+            GameObject descricao = GameObject.Find("jogador" + (aux + 1) + "-text");
             descricao.GetComponent<Text>().text = equipes[aux].nome;
 
             switch (equipes[aux].nomeGO) {
                 case "jogador1":
-                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[0];
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img_on[0];
+
+                    if (aux == 0) {
+                        iconeJogadores[0].GetComponent<Image>().sprite = jogador_img_on[0];
+                    } else {
+                        iconeJogadores[aux].GetComponent<Image>().sprite = jogador_img_off[0];
+                    }
                     break;
                 case "jogador2":
-                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[1];
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img_on[1];
+
+                    if (aux == 0) {
+                        iconeJogadores[0].GetComponent<Image>().sprite = jogador_img_on[1];
+                    } else {
+                        iconeJogadores[aux].GetComponent<Image>().sprite = jogador_img_off[1];
+                    }
                     break;
                 case "jogador3":
-                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[2];
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img_on[2];
+
+                    if (aux == 0) {
+                        iconeJogadores[0].GetComponent<Image>().sprite = jogador_img_on[2];
+                    } else {
+                        iconeJogadores[aux].GetComponent<Image>().sprite = jogador_img_off[2];
+                    }
                     break;
                 case "jogador4":
-                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[3];
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img_on[3];
+
+                    if (aux == 0) {
+                        iconeJogadores[0].GetComponent<Image>().sprite = jogador_img_on[3];
+                    } else {
+                        iconeJogadores[aux].GetComponent<Image>().sprite = jogador_img_off[3];
+                    }
                     break;
                 case "jogador5":
-                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img[4];
+                    imgJogTelaSorteio[aux].GetComponent<Image>().sprite = jogador_img_on[4];
+
+                    if (aux == 0) {
+                        iconeJogadores[0].GetComponent<Image>().sprite = jogador_img_on[4];
+                    } else {
+                        iconeJogadores[aux].GetComponent<Image>().sprite = jogador_img_off[4];
+                    }
                     break;
                 default:
                     break;
             }
+            AudioManager.instance.Play("snd_button");
             yield return new WaitForSeconds(0.8f);
             aux++;
         }
-
+        AudioManager.instance.Play("snd_transition");
         yield return new WaitForSeconds(tempo);
 
         telaSorteio.SetActive(false);
         botaoRoleta.SetActive(true);
         txtVezJogador.SetActive(true);
+
+        HabilitarIcones();
     }
 
     private IEnumerator PodeAndar(int segundos) {
@@ -752,6 +874,7 @@ public class GameControl : MonoBehaviour {
     private IEnumerator FecharTelaEmSegundos(int segundos)
     {
         AudioManager.instance.Stop("snd_clock");
+        AudioManager.instance.Stop("snd_clock_10s");
         GameObject respostaCorreta = GameObject.Find("RespostaCorreta");
     	GameObject respostaIncorreta = GameObject.Find("RespostaIncorreta");
     	yield return new WaitForSeconds(segundos);
@@ -762,6 +885,8 @@ public class GameControl : MonoBehaviour {
     	if (respostaIncorreta != null) respostaIncorreta.SetActive(false);
         StartCoroutine(FadeInOutMusicaPergunta(false));
         fundoEscuroTela.SetActive(false);
+
+        HabilitarIcones();
     }
 
     public void IniciarContagem(){
@@ -785,7 +910,10 @@ public class GameControl : MonoBehaviour {
 
     private void ExibirVencedores(){
         List<Equipe> vencedores = equipes.OrderBy(eq => eq.pontuacao).ToList();
+        vencedores.Reverse();
         telaVitoria.SetActive(true);
+        AudioManager.instance.Stop("mus_Jogo");
+        AudioManager.instance.Play("mus_Vitoria");
         txtEquipeVencedora.text = vencedores[0].nome;
         totem1lugar.gameObject.SetActive(true);
         totem2lugar.gameObject.SetActive(true);
@@ -835,24 +963,36 @@ public class GameControl : MonoBehaviour {
                 break;
         }
 
+        if (vencedores.Count <= 2)
+        {
+            trofeu3lugar.SetActive(false);
+            return;
+        }
+
         switch (vencedores[2].nomeGO)
         {
             case "jogador1":
+                trofeu3lugar.SetActive(true);
                 totem3lugar.sprite = totens[0];
                 break;
             case "jogador2":
+                trofeu3lugar.SetActive(true);
                 totem3lugar.sprite = totens[1];
                 break;
             case "jogador3":
+                trofeu3lugar.SetActive(true);
                 totem3lugar.sprite = totens[2];
                 break;
             case "jogador4":
+                trofeu3lugar.SetActive(true);
                 totem3lugar.sprite = totens[3];
                 break;
             case "jogador5":
+                trofeu3lugar.SetActive(true);
                 totem3lugar.sprite = totens[4];
                 break;
             default:
+                trofeu3lugar.SetActive(false);
                 totem3lugar.gameObject.SetActive(false);
                 break;
         }

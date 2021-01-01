@@ -26,7 +26,7 @@ public class SpinNumber : MonoBehaviour {
 
         if (cont++ >= 1)
         {
-            AudioManager.instance.Play("click");
+            AudioManager.instance.Play("snd_click");
             cont=1;
         }
 
